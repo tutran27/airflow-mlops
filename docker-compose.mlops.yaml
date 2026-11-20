@@ -1,0 +1,30 @@
+services:
+  ml-api:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    image: airflow-mlops-ml:latest
+    container_name: ml-api
+    ports:
+      - "8000:8000"
+    environment:
+      SHARED_DATA_DIR: ${SHARED_DATA_DIR:-/opt/shared}
+    volumes:
+      - mlops-shared:${SHARED_DATA_DIR:-/opt/shared}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - mlops-net
+
+volumes:
+  mlops-shared:
+    name: airflow_mlops_shared
+
+networks:
+  mlops-net:
+    name: airflow_mlops_net
